@@ -61,8 +61,8 @@ np.random.seed(args.rnd_seed)
 # Assume we want to train on 1 main task as binary task at column 'binary_target_1' of our metadata file.
 task_definition = TaskDefinition(targets=[  # Combines our sub-tasks
     BinaryTarget(  # Add binary classification task with sigmoid output function
-            column_name='binary_target_1',  # Column name of task in metadata file
-            true_class_value='+',  # Entries with value '+' will be positive class, others will be negative class
+            column_name='severity',  # Column name of task in metadata file
+            true_class_value='severe',  # Entries with value '+' will be positive class, others will be negative class
             pos_weight=1.,  # We can up- or down-weight the positive class if the classes are imbalanced
     ),
 ]).to(device=device)
@@ -74,11 +74,11 @@ task_definition = TaskDefinition(targets=[  # Combines our sub-tasks
 # Get data loaders for training set and training-, validation-, and test-set in evaluation mode (=no random subsampling)
 trainingset, trainingset_eval, validationset_eval, testset_eval = make_dataloaders(
         task_definition=task_definition,
-        metadata_file="deeprc/datasets/example_dataset/metadata.tsv",
-        repertoiresdata_path="deeprc/datasets/example_dataset/repertoires",
-        metadata_file_id_column='ID',
-        sequence_column='amino_acid',
-        sequence_counts_column='templates',
+        metadata_file="deeprc/datasets/example_dataset/random_meta.tsv",
+        repertoiresdata_path="deeprc/datasets/example_dataset/randomdataset",
+        metadata_file_id_column='sample_name',
+        sequence_column='seq',
+        sequence_counts_column='count',
         sample_n_sequences=args.sample_n_sequences,
         sequence_counts_scaling_fn=no_sequence_count_scaling  # Alternative: deeprc.dataset_readers.log_sequence_count_scaling
 )
@@ -109,7 +109,7 @@ model = DeepRC(max_seq_len=30, sequence_embedding_network=sequence_embedding_net
 #
 train(model, task_definition=task_definition, trainingset_dataloader=trainingset,
       trainingset_eval_dataloader=trainingset_eval, learning_rate=args.learning_rate,
-      early_stopping_target_id='binary_target_1',  # Get model that performs best for this task
+      early_stopping_target_id='severity',  # Get model that performs best for this task
       validationset_eval_dataloader=validationset_eval, n_updates=args.n_updates, evaluate_at=args.evaluate_at,
       device=device, results_directory="results/singletask_cnn"  # Here our results and trained models will be stored
       )
